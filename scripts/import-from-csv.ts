@@ -90,6 +90,18 @@ function descriptionBlock(raw: string) {
   return paragraphs.map(textToBlock);
 }
 
+// Upsert that leaves fields not in `fields` untouched — crucial for image
+// fields uploaded in Studio, which the CSV can't provide.
+function upsert(
+  tx: ReturnType<typeof client.transaction>,
+  id: string,
+  type: string,
+  fields: Record<string, unknown>
+) {
+  tx.createIfNotExists({ _id: id, _type: type });
+  tx.patch(id, (p) => p.set(fields));
+}
+
 async function importEvents() {
   const rows = readCsv(
     "Mid-Atlantic Uniform League - Events - 6761e66934fa35b9999102e5.csv"
@@ -97,9 +109,7 @@ async function importEvents() {
   const tx = client.transaction();
   for (const r of rows) {
     if (r.Archived === "true") continue;
-    const doc = {
-      _id: `event-${r["Item ID"]}`,
-      _type: "event",
+    upsert(tx, `event-${r["Item ID"]}`, "event", {
       title: r["Event Title"],
       slug: { _type: "slug", current: r.Slug },
       dateTime: new Date(r["Date & Time"]).toISOString(),
@@ -107,8 +117,7 @@ async function importEvents() {
       venueAddress: r["Venue Address"] || undefined,
       description: descriptionBlock(r.Description),
       infoLink: r["Info Link"] || undefined,
-    };
-    tx.createOrReplace(doc);
+    });
   }
   await tx.commit();
   console.log(`✓ Events: ${rows.length} rows`);
@@ -136,9 +145,7 @@ async function importAnniversaryEvents() {
   const tx = client.transaction();
   for (const r of rows) {
     if (r.Archived === "true") continue;
-    const doc = {
-      _id: `anniv-${r["Item ID"]}`,
-      _type: "anniversaryEvent",
+    upsert(tx, `anniv-${r["Item ID"]}`, "anniversaryEvent", {
       event: r.Event,
       slug: { _type: "slug", current: r.Slug },
       date: parseAnnivDate(r.Date),
@@ -146,8 +153,7 @@ async function importAnniversaryEvents() {
       endTime: r["Event End Time"] || undefined,
       venue: r.Venue || undefined,
       notes: descriptionBlock(r.Notes),
-    };
-    tx.createOrReplace(doc);
+    });
   }
   await tx.commit();
   console.log(`✓ Anniversary Events: ${rows.length} rows`);
@@ -160,15 +166,12 @@ async function importAmccClubs() {
   const tx = client.transaction();
   for (const r of rows) {
     if (r.Archived === "true") continue;
-    const doc = {
-      _id: `club-${r["Item ID"]}`,
-      _type: "amccClub",
+    upsert(tx, `club-${r["Item ID"]}`, "amccClub", {
       name: r.Name,
       slug: { _type: "slug", current: r.Slug },
       websiteLink: r["Website Link"] || undefined,
       location: r["Location (City, State)"] || undefined,
-    };
-    tx.createOrReplace(doc);
+    });
   }
   await tx.commit();
   console.log(`✓ AMCC Clubs: ${rows.length} rows`);
@@ -181,15 +184,12 @@ async function importGalleries() {
   const tx = client.transaction();
   for (const r of rows) {
     if (r.Archived === "true") continue;
-    const doc = {
-      _id: `gallery-${r["Item ID"]}`,
-      _type: "gallery",
+    upsert(tx, `gallery-${r["Item ID"]}`, "gallery", {
       name: r.Name,
       slug: { _type: "slug", current: r.Slug },
       date: r.Date ? new Date(r.Date).toISOString().slice(0, 10) : undefined,
       description: descriptionBlock(r.Description),
-    };
-    tx.createOrReplace(doc);
+    });
   }
   await tx.commit();
   console.log(`✓ Galleries: ${rows.length} rows`);
@@ -202,9 +202,7 @@ async function importLeadership() {
   const tx = client.transaction();
   rows.forEach((r, idx) => {
     if (r.Archived === "true") return;
-    const doc = {
-      _id: `leader-${r["Item ID"]}`,
-      _type: "leadership",
+    upsert(tx, `leader-${r["Item ID"]}`, "leadership", {
       position: r.Position,
       slug: { _type: "slug", current: r.Slug },
       fullName: r["Full Name"],
@@ -213,8 +211,7 @@ async function importLeadership() {
       facebook: r.Facebook || undefined,
       bluesky: r.Bluesky || undefined,
       order: idx,
-    };
-    tx.createOrReplace(doc);
+    });
   });
   await tx.commit();
   console.log(`✓ Leadership: ${rows.length} rows`);
