@@ -1,0 +1,207 @@
+/* Nav overrides to replace Webflow's jQuery-based w-nav behavior with React state. */
+
+/* Inner pages (without the homepage gradient): give the nav its own blue background */
+.page-wrapper:not(.background-gradient) .navbar9_component {
+  background-color: var(--maul-blue);
+}
+
+/* Blue footer variant: make link + credit text gold, match brand */
+.footer8_component_blue,
+.footer8_component_blue .footer8_link,
+.footer8_component_blue .footer8_credit-text {
+  color: var(--maul-gold);
+}
+
+.footer8_component_blue .footer8_link {
+  text-decoration: none;
+}
+
+.footer8_component_blue .footer8_link:hover {
+  text-decoration: underline;
+}
+
+.footer8_component_blue .line-divider {
+  background-color: rgba(244, 215, 15, 0.25);
+}
+
+
+/* Reset the hamburger button so it behaves like a real button */
+.navbar9_menu-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  appearance: none;
+  color: inherit;
+}
+
+/* Hamburger icon — absolute-positioned so the X shares the exact pivot */
+.menu-icon {
+  position: relative;
+}
+
+.menu-icon_line-top,
+.menu-icon_line-middle,
+.menu-icon_line-bottom {
+  position: absolute;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  margin: 0;
+  background-color: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(0);
+  transition: top 0.2s ease, bottom 0.2s ease, transform 0.2s ease, opacity 0.15s ease;
+}
+
+.menu-icon_line-top {
+  top: calc(50% - 8px);
+}
+
+.menu-icon_line-middle {
+  top: 50%;
+}
+
+.menu-icon_line-bottom {
+  top: calc(50% + 8px);
+}
+
+.menu-icon_line-middle-inner {
+  display: none;
+}
+
+/* Animate hamburger → close on open: three lines collapse to center and rotate */
+.navbar9_menu-button.w--open .menu-icon_line-top {
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.navbar9_menu-button.w--open .menu-icon_line-middle {
+  opacity: 0;
+}
+
+.navbar9_menu-button.w--open .menu-icon_line-bottom {
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* Mobile menu — shown only when .is-open, below the nav header */
+@media screen and (max-width: 991px) {
+  .navbar9_menu.is-open {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 2rem 1.5rem;
+    background-color: var(--maul-blue);
+    color: var(--maul-gold);
+    z-index: 40;
+    max-height: calc(100vh - 100%);
+    overflow-y: auto;
+  }
+
+  .navbar9_menu.is-open .navbar9_menu-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    width: 100%;
+  }
+
+  .navbar9_menu.is-open .navbar9_link {
+    display: block;
+    padding: 0.25rem 0;
+    font-size: 1.25rem;
+    color: var(--maul-gold);
+    text-align: center;
+  }
+
+  .navbar9_menu.is-open .navbar2_menu-dropdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar9_menu.is-open .navbar2_dropdwn-toggle {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0;
+    font-size: 1.25rem;
+    background: transparent;
+    border: none;
+    color: var(--maul-gold);
+    cursor: pointer;
+  }
+
+  .navbar9_menu.is-open .navbar2_menu-dropdown[data-open="true"] .dropdown-chevron {
+    transform: rotate(180deg);
+  }
+
+  .dropdown-chevron {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+  }
+
+  /* Stacked dropdown items in the mobile menu — not absolute-positioned */
+  .navbar9_menu.is-open .navbar2_dropdown-list {
+    position: static !important;
+    display: none;
+    background-color: transparent !important;
+    color: var(--maul-gold);
+    padding: 0.5rem 0 0 !important;
+    text-align: center;
+  }
+
+  .navbar9_menu.is-open .navbar2_dropdown-list.w--open {
+    display: block !important;
+    background-color: transparent !important;
+    color: var(--maul-gold) !important;
+  }
+
+  .navbar9_menu.is-open .navbar2_dropdown-link {
+    display: block;
+    padding: 0.5rem 0;
+    color: var(--maul-gold);
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .navbar9_menu.is-open .navbar9_menu-right {
+    margin-top: 2rem;
+    width: 100%;
+  }
+
+  .navbar9_menu.is-open .navbar9_menu-right .button {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Desktop: dropdown chevron stays button-sized */
+@media screen and (min-width: 992px) {
+  .dropdown-chevron {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+  }
+
+  .navbar2_menu-dropdown[data-open="true"] .dropdown-chevron {
+    transform: rotate(180deg);
+  }
+
+}
+
+/* Button reset — theme.css owns color/font-family/font-weight */
+.navbar2_dropdwn-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}

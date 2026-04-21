@@ -1,0 +1,282 @@
+/* Custom CSS for pages without a Webflow template (leadership, gallery detail, etc.) */
+
+/* Native <details>/<summary> accordion styling */
+details.accordion2_component > summary.accordion2_top {
+  list-style: none;
+}
+
+details.accordion2_component > summary.accordion2_top::-webkit-details-marker {
+  display: none;
+}
+
+details.accordion2_component .accordion2_bottom {
+  padding-top: 0;
+  padding-bottom: 1.25rem;
+}
+
+details.accordion2_component .accordion2_icon {
+  transition: transform 0.2s ease;
+}
+
+details.accordion2_component[open] .accordion2_icon {
+  transform: rotate(45deg);
+}
+
+details.accordion2_component + details.accordion2_component {
+  margin-top: 0.75rem;
+}
+
+
+/* Leadership grid */
+.leadership_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media screen and (max-width: 991px) {
+  .leadership_grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .leadership_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leadership_card {
+  display: block;
+  border: 3px solid var(--maul-blue);
+  background-color: var(--base-color-neutral--neutral-lightest);
+  border-radius: 25px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.leadership_card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 39, 99, 0.15);
+}
+
+.leadership_card-image {
+  aspect-ratio: 1;
+  background-color: var(--maul-blue);
+  overflow: hidden;
+}
+
+.leadership_card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 30%;
+  display: block;
+}
+
+.leadership_card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--maul-blue), #3a3a9a);
+}
+
+.leadership_card-text {
+  padding: 1.25rem 1.5rem;
+}
+
+.leadership_card-text h3 {
+  margin: 0 0 0.25rem;
+}
+
+.leadership_card-text p {
+  margin: 0;
+  opacity: 0.75;
+}
+
+/* Leadership detail */
+.leadership_detail {
+  display: grid;
+  grid-template-columns: minmax(280px, 400px) 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+@media screen and (max-width: 767px) {
+  .leadership_detail {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.leadership_detail-image {
+  border-radius: 25px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background-color: var(--maul-blue);
+}
+
+.leadership_detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.leadership_detail-socials {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+/* Gallery grid */
+.gallery_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media screen and (max-width: 991px) {
+  .gallery_grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .gallery_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gallery_card {
+  display: block;
+  border: 3px solid var(--maul-blue);
+  background-color: var(--base-color-neutral--neutral-lightest);
+  border-radius: 25px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gallery_card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 39, 99, 0.15);
+}
+
+.gallery_card-cover {
+  aspect-ratio: 4 / 3;
+  background-color: var(--maul-blue);
+  overflow: hidden;
+}
+
+.gallery_card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery_card-text {
+  padding: 1.25rem 1.5rem;
+}
+
+.gallery_card-text h3 {
+  margin: 0 0 0.25rem;
+}
+
+.gallery_card-text p {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.gallery_detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+@media screen and (max-width: 991px) {
+  .gallery_detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gallery_detail-image {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--maul-blue);
+}
+
+.gallery_detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* AMCC Clubs grid */
+.clubs_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media screen and (max-width: 991px) {
+  .clubs_grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .clubs_grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.club_card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  border: 3px solid var(--maul-blue);
+  background-color: var(--base-color-neutral--neutral-lightest);
+  border-radius: 25px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.club_card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 39, 99, 0.15);
+}
+
+.club_card-logo {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.club_card-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.club_card h3 {
+  margin: 0;
+  color: var(--maul-blue);
+}
+
+.club_card p {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.875rem;
+}
