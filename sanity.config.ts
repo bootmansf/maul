@@ -13,13 +13,24 @@ export default defineConfig({
   title: "Mid-Atlantic Uniform League",
   schema: {
     types: schemaTypes,
-    // Hide "Homepage" from the "+ Create" menu and from the action bar —
-    // it's a singleton; editors always edit the one existing document.
-    templates: (prev) => prev.filter((t) => t.schemaType !== "homepage"),
+    // Hide singletons from the "+ Create" menu — editors always land on
+    // the existing document via the sidebar, not a new copy.
+    templates: (prev) =>
+      prev.filter(
+        (t) =>
+          ![
+            "homepage",
+            "simplePage",
+            "howToJoinPage",
+            "anniversaryPage",
+          ].includes(t.schemaType)
+      ),
   },
   document: {
     actions: (prev, { schemaType }) =>
-      schemaType === "homepage"
+      ["homepage", "simplePage", "howToJoinPage", "anniversaryPage"].includes(
+        schemaType
+      )
         ? prev.filter(
             (a) => !["duplicate", "unpublish", "delete"].includes(a.action ?? "")
           )

@@ -1,13 +1,91 @@
 import Link from "next/link";
+import type { PortableTextBlock } from "@portabletext/react";
+import { PortableText } from "@portabletext/react";
+import type { SanityImageSource } from "@sanity/image-url";
 import { SiteNav } from "../../components/SiteNav";
 import { SiteFooter } from "../../components/SiteFooter";
+import { portableTextComponents } from "../../components/portableText";
+import { getClient } from "@/sanity/client";
+import { isSanityConfigured } from "@/sanity/env";
+import { urlFor } from "@/sanity/image";
+
+export const revalidate = 60;
 
 export const metadata = {
   title: "How to Join — Mid-Atlantic Uniform League",
   description: "How to become a MAUL officer.",
 };
 
-export default function HowToJoinPage() {
+const PAGE_QUERY = `*[_id == "howToJoinPage"][0]{
+  title, subtitle,
+  steps[]{ title, body },
+  infoCards[]{ heading, body },
+  sidebarImage,
+  contactHeading,
+  contactBody
+}`;
+
+type Step = { title?: string; body?: PortableTextBlock[] };
+type InfoCard = { heading?: string; body?: string };
+type Doc = {
+  title?: string;
+  subtitle?: string;
+  steps?: Step[];
+  infoCards?: InfoCard[];
+  sidebarImage?: SanityImageSource;
+  contactHeading?: string;
+  contactBody?: PortableTextBlock[];
+};
+
+const FALLBACK_STEPS: { title: string; body: string }[] = [
+  {
+    title: "Step One: Come and meet us",
+    body: "The first step toward becoming a MAUL Officer is to attend an event and meet the officers. We want to meet you and hear about your uniform experience! This also gives you a chance to see what we are about too! You must attend at least one in-person event before becoming a MAUL Cadet. MAUL hosts uniform events at both MAL and CLAW in addition to attending other events. Upcoming events are listed on the main page of the MAUL website.",
+  },
+  {
+    title: "Step Two: Membership Petition",
+    body: "Any gay male wishing to become an officer in the Mid-Atlantic Uniform League should submit a Membership Petition (via our online form) to the Deputy Chief/Membership Officer. This email should tell us a bit about you and your interest in the club. In addition, three Active Duty MAUL officers must endorse the petition before it is sent to the Chief for approval. You'll get these endorsements while attending one of our events. You can submit your Membership Petition email via our Contact Us page.",
+  },
+  {
+    title: "Step Three: Cadet Training",
+    body: "Upon the Chief's approval, the petitioner is granted probationary membership in MAUL and holds the rank of Cadet. Cadets will complete their training under the supervision of the Deputy Chief and a Training Officer. The Cadet's primary responsibility during their training period will be to familiarize themselves with the club, attend online meetings, and in-person events. Cadets will also need to assemble and wear the MAUL Class B uniform. You must attend at least one in-person event as a Cadet before being considered for full Officer status.",
+  },
+  {
+    title: "Step Four: Granting Membership",
+    body: "When the Cadet has finished his training and completed his Class B uniform, the Deputy Chief will certify to the Chief that the requirements of membership have been met. The Chief may then appoint the Cadet to be an Active Duty or Reserve Officer of the Mid-Atlantic Uniform League.",
+  },
+];
+
+const FALLBACK_INFO_CARDS: { heading: string; body: string }[] = [
+  {
+    heading: "Costs of Membership",
+    body: "Membership in MAUL is set at $75 annually, payable once a petitioner is appointed as a Cadet. The cost of the uniform will vary depending on how much of it the Cadet already owns.",
+  },
+  {
+    heading: "Levels of Membership",
+    body: "Membership in MAUL is set at $75 annually, payable once a petitioner is appointed as a Cadet. The cost of the uniform will vary depending on how much of it the Cadet already owns.",
+  },
+];
+
+function splitStepTitle(raw: string) {
+  const colonIdx = raw.indexOf(":");
+  if (colonIdx < 0) return { head: raw, rest: "" };
+  return {
+    head: raw.slice(0, colonIdx + 1).trim(),
+    rest: raw.slice(colonIdx + 1).trim(),
+  };
+}
+
+export default async function HowToJoinPage() {
+  const doc = isSanityConfigured()
+    ? await getClient().fetch<Doc | null>(PAGE_QUERY)
+    : null;
+
+  const title = doc?.title ?? "How To Join";
+  const subtitle = doc?.subtitle ?? "We\u2019re looking for a few good men!";
+  const steps = doc?.steps?.length ? doc.steps : FALLBACK_STEPS;
+  const infoCards = doc?.infoCards?.length ? doc.infoCards : FALLBACK_INFO_CARDS;
+
   return (
     <div className="page-wrapper">
       <SiteNav />
@@ -20,11 +98,11 @@ export default function HowToJoinPage() {
                 <div className="header46_component">
                   <div className="max-width-large">
                     <div className="margin-bottom margin-xsmall">
-                      <h1 className="heading-style-h1">How To Join</h1>
+                      <h1 className="heading-style-h1">{title}</h1>
                     </div>
-                    <p className="text-size-large">
-                      We&rsquo;re looking for a few good men!
-                    </p>
+                    {subtitle ? (
+                      <p className="text-size-large">{subtitle}</p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -39,64 +117,63 @@ export default function HowToJoinPage() {
                 <div className="layout3_component">
                   <div className="w-layout-grid layout3_content">
                     <div className="layout3_content-left">
-                      <AccordionStep
-                        title={<>Step One: <br />Come and meet us</>}
-                        body="The first step toward becoming a MAUL Officer is to attend an event and meet the officers. We want to meet you and hear about your uniform experience! This also gives you a chance to see what we are about too! You must attend at least one in-person event before becoming a MAUL Cadet. MAUL hosts uniform events at both MAL and CLAW in addition to attending other events. Upcoming events are listed on the main page of the MAUL website."
-                      />
-                      <AccordionStep
-                        title={<>Step Two: <br />Membership Petition</>}
-                        body={
-                          <>
-                            Any gay male wishing to become an officer in the
-                            Mid-Atlantic Uniform League should submit a
-                            Membership Petition (via our online form) to the
-                            Deputy Chief/Membership Officer. This email should
-                            tell us a bit about you and your interest in the
-                            club. In addition, three Active Duty MAUL officers
-                            must endorse the petition before it is sent to the
-                            Chief for approval. You&rsquo;ll get these
-                            endorsements while attending one of our events.
-                            You can submit your Membership Petition email via
-                            our{" "}
-                            <Link href="/contact">
-                              <strong>Contact Us</strong>
-                            </Link>{" "}
-                            page.
-                          </>
-                        }
-                      />
-                      <AccordionStep
-                        title={<>Step Three: <br />Cadet Training</>}
-                        body="Upon the Chief's approval, the petitioner is granted probationary membership in MAUL and holds the rank of Cadet. Cadets will complete their training under the supervision of the Deputy Chief and a Training Officer. The Cadet's primary responsibility during their training period will be to familiarize themselves with the club, attend online meetings, and in-person events. Cadets will also need to assemble and wear the MAUL Class B uniform. You must attend at least one in-person event as a Cadet before being considered for full Officer status."
-                      />
-                      <AccordionStep
-                        title={<>Step Four:<br />Granting Membership</>}
-                        body="When the Cadet has finished his training and completed his Class B uniform, the Deputy Chief will certify to the Chief that the requirements of membership have been met. The Chief may then appoint the Cadet to be an Active Duty or Reserve Officer of the Mid-Atlantic Uniform League."
-                      />
+                      {steps.map((step, i) => {
+                        const stepTitle = step.title ?? "";
+                        const { head, rest } = splitStepTitle(stepTitle);
+                        return (
+                          <AccordionStep
+                            key={i}
+                            headLine={head}
+                            subLine={rest}
+                            body={
+                              Array.isArray(step.body) ? (
+                                <PortableText
+                                  value={step.body}
+                                  components={portableTextComponents}
+                                />
+                              ) : (
+                                <p>{step.body as unknown as string}</p>
+                              )
+                            }
+                          />
+                        );
+                      })}
 
                       <div className="w-layout-grid card-row10_component">
-                        <InfoCard
-                          heading="Costs of Membership"
-                          body="Membership in MAUL is set at $75 annually, payable once a petitioner is appointed as a Cadet. The cost of the uniform will vary depending on how much of it the Cadet already owns."
-                        />
-                        <InfoCard
-                          heading="Levels of Membership"
-                          body="Membership in MAUL is set at $75 annually, payable once a petitioner is appointed as a Cadet. The cost of the uniform will vary depending on how much of it the Cadet already owns."
-                        />
+                        {infoCards.map((card, i) => (
+                          <InfoCard
+                            key={i}
+                            heading={card.heading ?? ""}
+                            body={card.body ?? ""}
+                          />
+                        ))}
                       </div>
                     </div>
 
                     <div className="layout3_content-left">
                       <div className="layout3_image-wrapper">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          sizes="(max-width: 912px) 100vw, 912px"
-                          srcSet="/images/5_Group-p-500.jpg 500w, /images/5_Group-p-800.jpg 800w, /images/5_Group.jpg 912w"
-                          alt="MAUL officers in formation"
-                          src="/images/5_Group.jpg"
-                          loading="lazy"
-                          className="layout3_image"
-                        />
+                        {doc?.sidebarImage ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={urlFor(doc.sidebarImage)
+                              .width(1600)
+                              .fit("max")
+                              .url()}
+                            alt={title}
+                            className="layout3_image"
+                            loading="lazy"
+                          />
+                        ) : (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            sizes="(max-width: 912px) 100vw, 912px"
+                            srcSet="/images/5_Group-p-500.jpg 500w, /images/5_Group-p-800.jpg 800w, /images/5_Group.jpg 912w"
+                            alt="MAUL officers in formation"
+                            src="/images/5_Group.jpg"
+                            loading="lazy"
+                            className="layout3_image"
+                          />
+                        )}
                       </div>
                       <div className="w-layout-grid card-row10_component">
                         <div className="card-row10_card_contact">
@@ -104,17 +181,28 @@ export default function HowToJoinPage() {
                             <div className="card-row10_card-small-content-top">
                               <div className="margin-bottom margin-small">
                                 <h3 className="heading-style-h6">
-                                  <strong>Contact</strong>
+                                  <strong>
+                                    {doc?.contactHeading ?? "Contact"}
+                                  </strong>
                                 </h3>
                               </div>
-                              <p>
-                                For more information, please contact the Deputy
-                                Chief/Membership Officer on our{" "}
-                                <Link href="/contact">
-                                  <strong>Contact Us</strong>
-                                </Link>{" "}
-                                page.
-                              </p>
+                              {doc?.contactBody?.length ? (
+                                <div>
+                                  <PortableText
+                                    value={doc.contactBody}
+                                    components={portableTextComponents}
+                                  />
+                                </div>
+                              ) : (
+                                <p>
+                                  For more information, please contact the
+                                  Deputy Chief/Membership Officer on our{" "}
+                                  <Link href="/contact">
+                                    <strong>Contact Us</strong>
+                                  </Link>{" "}
+                                  page.
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -134,17 +222,28 @@ export default function HowToJoinPage() {
 }
 
 function AccordionStep({
-  title,
+  headLine,
+  subLine,
   body,
 }: {
-  title: React.ReactNode;
+  headLine: string;
+  subLine: string;
   body: React.ReactNode;
 }) {
   return (
     <details className="accordion2_component">
       <summary className="accordion2_top">
         <div className="heading-style-h6">
-          <strong>{title}</strong>
+          <strong>
+            {headLine}
+            {subLine ? (
+              <>
+                {" "}
+                <br />
+                {subLine}
+              </>
+            ) : null}
+          </strong>
         </div>
         <div className="accordion2_icon" aria-hidden="true">
           <svg
@@ -162,9 +261,7 @@ function AccordionStep({
         </div>
       </summary>
       <div className="accordion2_bottom">
-        <div className="margin-bottom margin-small">
-          <p>{body}</p>
-        </div>
+        <div className="margin-bottom margin-small">{body}</div>
       </div>
     </details>
   );

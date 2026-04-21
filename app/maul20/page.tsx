@@ -1,10 +1,12 @@
 import type { PortableTextBlock } from "@portabletext/react";
 import { PortableText } from "@portabletext/react";
+import type { SanityImageSource } from "@sanity/image-url";
 import { SiteNav } from "../components/SiteNav";
 import { SiteFooter } from "../components/SiteFooter";
 import { Countdown } from "../components/Countdown";
 import { getClient } from "@/sanity/client";
 import { isSanityConfigured } from "@/sanity/env";
+import { urlFor } from "@/sanity/image";
 
 export const revalidate = 60;
 
@@ -17,6 +19,45 @@ export const metadata = {
 const ANNIV_QUERY = `*[_type == "anniversaryEvent"] | order(date asc){
   _id, event, "slug": slug.current, date, startTime, endTime, venue, notes
 }`;
+
+const PAGE_QUERY = `*[_id == "anniversaryPage"][0]{
+  heroHeading, heroDates, heroLocation, heroBody, countdownTarget, heroImage,
+  ticketsHeading, ticketsBody, ticketsCtaLabel, ticketsUrl,
+  hotelHeading, hotelName, hotelAddress, hotelCtaLabel, hotelUrl,
+  scheduleHeading
+}`;
+
+type AnnivPage = {
+  heroHeading?: string;
+  heroDates?: string;
+  heroLocation?: string;
+  heroBody?: string;
+  countdownTarget?: string;
+  heroImage?: SanityImageSource;
+  ticketsHeading?: string;
+  ticketsBody?: string;
+  ticketsCtaLabel?: string;
+  ticketsUrl?: string;
+  hotelHeading?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  hotelCtaLabel?: string;
+  hotelUrl?: string;
+  scheduleHeading?: string;
+};
+
+// Split a multi-line string into JSX with <br /> between lines so editors
+// can control line breaks by just hitting Enter in the Studio field.
+function linesToNodes(s: string | undefined) {
+  if (!s) return null;
+  const parts = s.split(/\r?\n/);
+  return parts.map((line, i) => (
+    <span key={i}>
+      {line}
+      {i < parts.length - 1 ? <br /> : null}
+    </span>
+  ));
+}
 
 // "3:00 PM" / "10:30 AM" → minutes since midnight for sorting.
 // Returns Infinity for missing/unparseable so they sink to the bottom.
@@ -51,9 +92,14 @@ const SCHEDULE_DAYS: { key: string; label: string }[] = [
 ];
 
 export default async function Maul20Page() {
-  const all = isSanityConfigured()
-    ? await getClient().fetch<AnnivEvent[]>(ANNIV_QUERY)
-    : [];
+  const [all, page] = isSanityConfigured()
+    ? await Promise.all([
+        getClient().fetch<AnnivEvent[]>(ANNIV_QUERY),
+        getClient().fetch<AnnivPage | null>(PAGE_QUERY),
+      ])
+    : [[] as AnnivEvent[], null];
+
+  const pg: AnnivPage = page ?? {};
 
   const byDay = SCHEDULE_DAYS.map((d) => ({
     ...d,
@@ -79,46 +125,58 @@ export default async function Maul20Page() {
                     <div className="margin-bottom margin-small">
                       <div className="div-block-2">
                         <h1 className="heading-style-h1 text-style-allcaps height-one text-color-gold">
-                          Mid-Atlantic Uniform League
-                          <br />
-                          20th Anniversary
+                          {pg.heroHeading ? (
+                            linesToNodes(pg.heroHeading)
+                          ) : (
+                            <>
+                              Mid-Atlantic Uniform League
+                              <br />
+                              20th Anniversary
+                            </>
+                          )}
                         </h1>
                       </div>
                       <h2 className="heading-style-h4 text-weight-medium height-one">
-                        September 17-20, 2026
+                        {pg.heroDates ?? "September 17-20, 2026"}
                         <br />
-                        Providence, RI
+                        {pg.heroLocation ?? "Providence, RI"}
                       </h2>
                     </div>
                     <p className="text-size-medium">
-                      Join us as we celebrate twenty years of legacy, pride, and
-                      community.
+                      {pg.heroBody ??
+                        "Join us as we celebrate twenty years of legacy, pride, and community."}
                     </p>
                     <div className="margin-top margin-medium">
-                      <Countdown targetIso="2026-09-17T21:00:00" />
+                      <Countdown
+                        targetIso={pg.countdownTarget ?? "2026-09-17T21:00:00"}
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="event-bookinglinks">
                   <div className="anniversaryblock-book text-color-blue align-center">
                     <h3 className="heading-style-h5 text-align-center">
-                      Tickets Now Available
+                      {pg.ticketsHeading ?? "Tickets Now Available"}
                     </h3>
                     <div className="div-block">
                       <div className="margin-top">
                         <div className="text-size-regular text-align-center">
-                          A weekend you won&rsquo;t want to miss!
+                          {pg.ticketsBody ??
+                            "A weekend you won\u2019t want to miss!"}
                         </div>
                       </div>
                       <div className="margin-top margin-xsmall">
                         <div className="centerbuttonblock">
                           <a
-                            href="https://www.eventbrite.com/e/mid-atlantic-uniform-league-20th-anniversary-run-festival-providence-ri-registration-1982476097374"
+                            href={
+                              pg.ticketsUrl ??
+                              "https://www.eventbrite.com/e/mid-atlantic-uniform-league-20th-anniversary-run-festival-providence-ri-registration-1982476097374"
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="button is-alternate w-button"
                           >
-                            Buy Tickets
+                            {pg.ticketsCtaLabel ?? "Buy Tickets"}
                           </a>
                         </div>
                       </div>
@@ -126,26 +184,37 @@ export default async function Maul20Page() {
                   </div>
 
                   <div className="anniversaryblock-book text-color-blue align-center">
-                    <h3 className="heading-style-h5">Host Hotel</h3>
+                    <h3 className="heading-style-h5">
+                      {pg.hotelHeading ?? "Host Hotel"}
+                    </h3>
                     <div className="div-block">
                       <div className="margin-top">
                         <div className="text-size-regular text-align-center">
-                          <strong>Hotel Providence</strong>
+                          <strong>{pg.hotelName ?? "Hotel Providence"}</strong>
                           <br />
-                          139 Mathewson St,
-                          <br />
-                          Providence, RI 02903
+                          {pg.hotelAddress
+                            ? linesToNodes(pg.hotelAddress)
+                            : (
+                              <>
+                                139 Mathewson St,
+                                <br />
+                                Providence, RI 02903
+                              </>
+                            )}
                         </div>
                       </div>
                       <div className="margin-top margin-xsmall">
                         <div className="centerbuttonblock">
                           <a
-                            href="https://secure.webrez.com/hotel/4174/?package_id=341360&date_from=20260918&date_to=20260920"
+                            href={
+                              pg.hotelUrl ??
+                              "https://secure.webrez.com/hotel/4174/?package_id=341360&date_from=20260918&date_to=20260920"
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="button is-alternate w-button"
                           >
-                            Book Now!
+                            {pg.hotelCtaLabel ?? "Book Now!"}
                           </a>
                         </div>
                       </div>
@@ -157,15 +226,25 @@ export default async function Maul20Page() {
           </div>
           <div className="header6_background-image-wrapper">
             <div className="image-overlay-layer" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              loading="eager"
-              src="/images/MAUL20_PHBG.avif"
-              alt=""
-              srcSet="/images/MAUL20_PHBG-p-500.avif 500w, /images/MAUL20_PHBG-p-800.avif 800w, /images/MAUL20_PHBG-p-1080.avif 1080w, /images/MAUL20_PHBG-p-1600.avif 1600w, /images/MAUL20_PHBG-p-2000.avif 2000w, /images/MAUL20_PHBG.avif 3200w"
-              sizes="100vw"
-              className="header6_background-image"
-            />
+            {pg.heroImage ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                loading="eager"
+                src={urlFor(pg.heroImage).width(3200).fit("max").url()}
+                alt=""
+                className="header6_background-image"
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                loading="eager"
+                src="/images/MAUL20_PHBG.avif"
+                alt=""
+                srcSet="/images/MAUL20_PHBG-p-500.avif 500w, /images/MAUL20_PHBG-p-800.avif 800w, /images/MAUL20_PHBG-p-1080.avif 1080w, /images/MAUL20_PHBG-p-1600.avif 1600w, /images/MAUL20_PHBG-p-2000.avif 2000w, /images/MAUL20_PHBG.avif 3200w"
+                sizes="100vw"
+                className="header6_background-image"
+              />
+            )}
           </div>
         </header>
 
@@ -178,7 +257,9 @@ export default async function Maul20Page() {
                     <div className="max-width-large align-center">
                       <div className="text-align-center">
                         <div className="margin-bottom">
-                          <h2 className="heading-style-h2">Weekend Schedule</h2>
+                          <h2 className="heading-style-h2">
+                            {pg.scheduleHeading ?? "Weekend Schedule"}
+                          </h2>
                         </div>
                       </div>
                     </div>

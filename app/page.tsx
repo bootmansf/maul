@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteNav } from "./components/SiteNav";
 import { SiteFooter } from "./components/SiteFooter";
+import { ContactForm } from "./components/ContactForm";
 import { getClient } from "@/sanity/client";
 import { isSanityConfigured } from "@/sanity/env";
 import { urlFor } from "@/sanity/image";
@@ -485,75 +486,10 @@ export default async function Home() {
 
                 <div className="w-layout-grid home_contact_component">
                   <div className="home_contact_form-block w-form">
-                    <form
-                      action={
-                        process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT || undefined
-                      }
-                      method="POST"
-                      className="home_contact_form"
-                    >
-                      <div className="form_field-wrapper">
-                        <label
-                          htmlFor="contact-name"
-                          className="form_field-label"
-                        >
-                          Name
-                        </label>
-                        <input
-                          className="form_input w-input"
-                          maxLength={256}
-                          name="name"
-                          type="text"
-                          id="contact-name"
-                          required
-                        />
-                      </div>
-                      <div className="form_field-wrapper">
-                        <label
-                          htmlFor="contact-email"
-                          className="form_field-label"
-                        >
-                          Email
-                        </label>
-                        <input
-                          className="form_input w-input"
-                          maxLength={256}
-                          name="email"
-                          type="email"
-                          id="contact-email"
-                          required
-                        />
-                      </div>
-                      <div className="form_field-wrapper">
-                        <label
-                          htmlFor="contact-message"
-                          className="form_field-label"
-                        >
-                          Message
-                        </label>
-                        <textarea
-                          placeholder="Type your message..."
-                          maxLength={5000}
-                          id="contact-message"
-                          name="message"
-                          required
-                          className="form_input is-text-area w-input"
-                        />
-                      </div>
-                      <input
-                        type="submit"
-                        className="button w-button"
-                        value="Submit"
-                        disabled={!process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT}
-                      />
-                      {!process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT && (
-                        <p className="text-size-small text-color-white" style={{ marginTop: "0.5rem", opacity: 0.7 }}>
-                          Form not wired up yet. Set{" "}
-                          <code>NEXT_PUBLIC_FORMSPREE_ENDPOINT</code> to
-                          activate.
-                        </p>
-                      )}
-                    </form>
+                    <ContactForm
+                      heading=""
+                      copy=""
+                    />
                   </div>
 
                   <div className="home_contact_content">

@@ -57,20 +57,32 @@ export function ContactForm({
     }
   }
 
+  const showHeader = Boolean(heading || copy);
+
   return (
     <>
-      <div className="margin-bottom margin-medium">
-        <div className="contact9_heading-wrapper">
-          <div className="margin-bottom margin-small">
-            <h2 className="heading-style-h3 text-color-blue">{heading}</h2>
+      {showHeader ? (
+        <div className="margin-bottom margin-medium">
+          <div className="contact9_heading-wrapper">
+            {heading ? (
+              <div className="margin-bottom margin-small">
+                <h2 className="heading-style-h3 text-color-blue">{heading}</h2>
+              </div>
+            ) : null}
+            {copy ? <p className="text-size-medium">{copy}</p> : null}
           </div>
-          <p className="text-size-medium">{copy}</p>
         </div>
-      </div>
+      ) : null}
 
       <div className="contact9_form-block w-form">
         {status === "success" ? (
-          <div className="form_message-success-wrapper-2 w-form-done">
+          // Don't add w-form-done here — Webflow's base CSS sets it to
+          // display:none and relies on Webflow's runtime to toggle it.
+          <div
+            className="form_message-success-wrapper-2"
+            role="status"
+            aria-live="polite"
+          >
             <div className="form_message-success">
               <div className="success-text">
                 Thank you! Your submission has been received.
