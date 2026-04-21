@@ -185,7 +185,7 @@ export default async function Maul20Page() {
                   </div>
                   <div className="event31_content">
                     {byDay.map((d) => (
-                      <details key={d.key} className="event31_accordion" open>
+                      <details key={d.key} className="event31_accordion">
                         <summary className="event31_day">
                           <h3 className="heading-style-h5">{d.label}</h3>
                           <div className="event31_icon-wrapper" aria-hidden="true">
