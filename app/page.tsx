@@ -10,6 +10,16 @@ const UPCOMING_EVENTS_QUERY = `*[_type == "event" && dateTime >= now()] | order(
   _id, title, "slug": slug.current, dateTime, locationVenue, venueAddress, "infoLink": infoLink, eventPicture
 }`;
 
+const HOMEPAGE_QUERY = `*[_id == "homepage"][0]{
+  heroHeading, heroBody, heroCtaLabel, heroCtaLink,
+  aboutHeading, aboutBody, aboutCtaLabel, aboutCtaLink, aboutImage,
+  featuresHeading,
+  featureCards[]{ title, body, image, ctaLabel, ctaLink },
+  eventsHeading, eventsBody, eventsPartnerHeading, eventsPartnerBody,
+  contactHeading, contactBody, contactEmail,
+  contactMembershipHeading, contactMembershipBody
+}`;
+
 export const revalidate = 60;
 
 type UpcomingEvent = {
@@ -22,6 +32,78 @@ type UpcomingEvent = {
   infoLink?: string;
   eventPicture?: SanityImageSource;
 };
+
+type FeatureCard = {
+  title?: string;
+  body?: string;
+  image?: SanityImageSource;
+  ctaLabel?: string;
+  ctaLink?: string;
+};
+
+type Homepage = {
+  heroHeading?: string;
+  heroBody?: string;
+  heroCtaLabel?: string;
+  heroCtaLink?: string;
+  aboutHeading?: string;
+  aboutBody?: string;
+  aboutCtaLabel?: string;
+  aboutCtaLink?: string;
+  aboutImage?: SanityImageSource;
+  featuresHeading?: string;
+  featureCards?: FeatureCard[];
+  eventsHeading?: string;
+  eventsBody?: string;
+  eventsPartnerHeading?: string;
+  eventsPartnerBody?: string;
+  contactHeading?: string;
+  contactBody?: string;
+  contactEmail?: string;
+  contactMembershipHeading?: string;
+  contactMembershipBody?: string;
+};
+
+const FALLBACK_FEATURES: FeatureCard[] = [
+  {
+    title: "Brotherhood",
+    body: "We are a social and fraternal association for gay adult male with affinity or fetish for uniforms.",
+    ctaLabel: "Learn More",
+    ctaLink: "/about/our-mission",
+  },
+  {
+    title: "Community",
+    body: "We conduct outreach with other queer leather and uniform clubs and attend leather events throughout the year.",
+    ctaLabel: "Learn More",
+    ctaLink: "/about/our-mission",
+  },
+  {
+    title: "Service",
+    body: "We support and assist appropriate charities and community services, particularly those related to gay, fetish or public safety issues.",
+    ctaLabel: "Learn More",
+    ctaLink: "/about/our-mission",
+  },
+];
+
+// Default images that keep the homepage looking right when the Sanity doc
+// hasn't been filled out yet.
+const FALLBACK_FEATURE_IMAGES = [
+  {
+    src: "/images/PXL_20240113_184215944.MP~2_Original.jpg",
+    alt: "Officers sharing a tender moment",
+    variant: "img_1",
+  },
+  {
+    src: "/images/RoselandGroup.jpg",
+    alt: "MAUL Officers holding banner",
+    variant: "",
+  },
+  {
+    src: "/images/IMG_1167.webp",
+    alt: "Parade of colors featuring multiple clubs.",
+    variant: "img_3",
+  },
+];
 
 function formatEventDate(iso: string) {
   const d = new Date(iso);
@@ -37,9 +119,18 @@ function formatEventDate(iso: string) {
 }
 
 export default async function Home() {
-  const events = isSanityConfigured()
-    ? await getClient().fetch<UpcomingEvent[]>(UPCOMING_EVENTS_QUERY)
-    : [];
+  const [events, hp] = isSanityConfigured()
+    ? await Promise.all([
+        getClient().fetch<UpcomingEvent[]>(UPCOMING_EVENTS_QUERY),
+        getClient().fetch<Homepage | null>(HOMEPAGE_QUERY),
+      ])
+    : [[] as UpcomingEvent[], null];
+
+  const home: Homepage = hp ?? {};
+  const featureCards =
+    home.featureCards && home.featureCards.length > 0
+      ? home.featureCards
+      : FALLBACK_FEATURES;
 
   return (
     <div className="page-wrapper background-gradient">
@@ -64,21 +155,21 @@ export default async function Home() {
                         />
                       </div>
                       <div className="margin-bottom margin-small">
-                        <h1 className="text-color-gold">Serving since 2007</h1>
+                        <h1 className="text-color-gold">
+                          {home.heroHeading ?? "Serving since 2007"}
+                        </h1>
                       </div>
                       <p className="text-size-medium text-color-white">
-                        Mid-Atlantic Uniform League (MAUL) is a gay uniform
-                        club. Founded in January 2007, we aim to promote,
-                        organize and attend uniform-themed events in the
-                        mid-atlantic and surrounding regions.
+                        {home.heroBody ??
+                          "Mid-Atlantic Uniform League (MAUL) is a gay uniform club. Founded in January 2007, we aim to promote, organize and attend uniform-themed events in the mid-atlantic and surrounding regions."}
                       </p>
                       <div className="margin-top margin-medium">
                         <div className="button-group">
                           <Link
-                            href="/about"
+                            href={home.heroCtaLink ?? "/about"}
                             className="button is-icon is-alternate w-inline-block"
                           >
-                            <div>Learn More</div>
+                            <div>{home.heroCtaLabel ?? "Learn More"}</div>
                           </Link>
                         </div>
                       </div>
@@ -98,15 +189,28 @@ export default async function Home() {
                 <div className="home_about_component">
                   <div className="home_about_content-left">
                     <div className="home_about_image-wrapper">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/images/IMG_8507.jpg"
-                        alt="MAUL Officers in formation"
-                        className="home_about_image1"
-                        loading="eager"
-                        sizes="(max-width: 4032px) 100vw, 4032px"
-                        srcSet="/images/IMG_8507-p-500.jpg 500w, /images/IMG_8507-p-800.jpg 800w, /images/IMG_8507-p-1080.jpg 1080w, /images/IMG_8507-p-1600.jpg 1600w, /images/IMG_8507-p-2000.jpg 2000w, /images/IMG_8507-p-2600.jpg 2600w, /images/IMG_8507-p-3200.jpg 3200w, /images/IMG_8507.jpg 4032w"
-                      />
+                      {home.aboutImage ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={urlFor(home.aboutImage)
+                            .width(2000)
+                            .fit("max")
+                            .url()}
+                          alt={home.aboutHeading ?? "MAUL Officers"}
+                          className="home_about_image1"
+                          loading="eager"
+                        />
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src="/images/IMG_8507.jpg"
+                          alt="MAUL Officers in formation"
+                          className="home_about_image1"
+                          loading="eager"
+                          sizes="(max-width: 4032px) 100vw, 4032px"
+                          srcSet="/images/IMG_8507-p-500.jpg 500w, /images/IMG_8507-p-800.jpg 800w, /images/IMG_8507-p-1080.jpg 1080w, /images/IMG_8507-p-1600.jpg 1600w, /images/IMG_8507-p-2000.jpg 2000w, /images/IMG_8507-p-2600.jpg 2600w, /images/IMG_8507-p-3200.jpg 3200w, /images/IMG_8507.jpg 4032w"
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="home_about_content-right">
@@ -126,23 +230,20 @@ export default async function Home() {
                     <div className="home_about_content-right-bottom">
                       <div className="margin-bottom margin-small">
                         <h2 className="text-color-alternate is-gold">
-                          Mid-Atlantic &amp; Beyond
+                          {home.aboutHeading ?? "Mid-Atlantic \u0026 Beyond"}
                         </h2>
                       </div>
                       <p className="text-size-medium text-color-white">
-                        While our officers attend to many events in the
-                        Mid-Atlantic, MAUL membership is open to anyone who is
-                        proud to openly identify as a gay adult male with a
-                        uniform fetish, regardless of age, race, creed,
-                        religion, or any other such classification.
+                        {home.aboutBody ??
+                          "While our officers attend to many events in the Mid-Atlantic, MAUL membership is open to anyone who is proud to openly identify as a gay adult male with a uniform fetish, regardless of age, race, creed, religion, or any other such classification."}
                       </p>
                       <div className="margin-top margin-medium">
                         <div className="button-group">
                           <Link
-                            href="/membership/how-to-join"
+                            href={home.aboutCtaLink ?? "/membership/how-to-join"}
                             className="button is-alternate w-button"
                           >
-                            How to Join
+                            {home.aboutCtaLabel ?? "How to Join"}
                           </Link>
                         </div>
                       </div>
@@ -164,68 +265,59 @@ export default async function Home() {
                     <div className="text-align-center">
                       <div className="max-width-large">
                         <h3 className="text-color-alternate is-gold">
-                          What we&rsquo;re all about!
+                          {home.featuresHeading ?? "What we\u2019re all about!"}
                         </h3>
                       </div>
                     </div>
                   </div>
 
                   <div className="w-layout-grid home_features-list_list">
-                    {[
-                      {
-                        img: "/images/PXL_20240113_184215944.MP~2_Original.jpg",
-                        alt: "Officers sharing a tender moment",
-                        title: "Brotherhood",
-                        copy: "We are a social and fraternal association for gay adult male with affinity or fetish for uniforms.",
-                        variant: "img_1",
-                      },
-                      {
-                        img: "/images/RoselandGroup.jpg",
-                        alt: "MAUL Officers holding banner",
-                        title: "Community",
-                        copy: "We conduct outreach with other queer leather and uniform clubs and attend leather events throughout the year.",
-                        variant: "",
-                      },
-                      {
-                        img: "/images/IMG_1167.webp",
-                        alt: "Parade of colors featuring multiple clubs.",
-                        title: "Service",
-                        copy: "We support and assist appropriate charities and community services, particularly those related to gay, fetish or public safety issues.",
-                        variant: "img_3",
-                      },
-                    ].map((f) => (
-                      <div className="home_features-list_item" key={f.title}>
-                        <div className="margin-bottom">
-                          <div className="home_features-list_image-wrapper">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={f.img}
-                              alt={f.alt}
-                              className={`home_features-list_image ${f.variant}`.trim()}
-                              loading="lazy"
-                            />
+                    {featureCards.map((card, i) => {
+                      const fallback = FALLBACK_FEATURE_IMAGES[i] ?? FALLBACK_FEATURE_IMAGES[0];
+                      const imgSrc = card.image
+                        ? urlFor(card.image).width(800).height(600).fit("crop").crop("center").url()
+                        : fallback.src;
+                      const imgAlt = card.title || fallback.alt;
+                      const ctaLabel = card.ctaLabel || "Learn More";
+                      const ctaHref = card.ctaLink || "/about/our-mission";
+                      return (
+                        <div className="home_features-list_item" key={card.title ?? i}>
+                          <div className="margin-bottom">
+                            <div className="home_features-list_image-wrapper">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={imgSrc}
+                                alt={imgAlt}
+                                className={`home_features-list_image ${
+                                  card.image ? "" : fallback.variant
+                                }`.trim()}
+                                loading="lazy"
+                              />
+                            </div>
+                          </div>
+                          <div className="margin-bottom margin-xsmall">
+                            <h3 className="heading-style-h5">
+                              <strong className="text-color-blue">
+                                {card.title}
+                              </strong>
+                            </h3>
+                          </div>
+                          {card.body ? (
+                            <p className="card_width">{card.body}</p>
+                          ) : null}
+                          <div className="margin-small">
+                            <div className="button-group is-center">
+                              <Link
+                                href={ctaHref}
+                                className="button is-icon w-inline-block"
+                              >
+                                <div>{ctaLabel}</div>
+                              </Link>
+                            </div>
                           </div>
                         </div>
-                        <div className="margin-bottom margin-xsmall">
-                          <h3 className="heading-style-h5">
-                            <strong className="text-color-blue">
-                              {f.title}
-                            </strong>
-                          </h3>
-                        </div>
-                        <p className="card_width">{f.copy}</p>
-                        <div className="margin-small">
-                          <div className="button-group is-center">
-                            <Link
-                              href="/about/our-mission"
-                              className="button is-icon w-inline-block"
-                            >
-                              <div>Learn More</div>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -245,15 +337,13 @@ export default async function Home() {
                         <div className="max-width-large align-center">
                           <div className="margin-bottom margin-small">
                             <h3 className="text-align-left text-color-gold">
-                              Where to find us
+                              {home.eventsHeading ?? "Where to find us"}
                             </h3>
                           </div>
                           <div className="margin-bottom margin-small">
                             <p className="text-size-medium text-align-left text-color-white">
-                              Officers of the club assemble at several events
-                              during the year including local police parades,
-                              motorcycle rodeos, and other law enforcement
-                              events throughout the year.
+                              {home.eventsBody ??
+                                "Officers of the club assemble at several events during the year including local police parades, motorcycle rodeos, and other law enforcement events throughout the year."}
                             </p>
                           </div>
                         </div>
@@ -278,10 +368,12 @@ export default async function Home() {
                           />
                           <div className="margin-bottom">
                             <h3 className="heading-style-h5 text-color-gold margin-bottom margin-xxsmall">
-                              Looking to partner with us for an event?
+                              {home.eventsPartnerHeading ??
+                                "Looking to partner with us for an event?"}
                             </h3>
                             <p className="text-color-white">
-                              Contact our Events Officer or use the form below.
+                              {home.eventsPartnerBody ??
+                                "Contact our Events Officer or use the form below."}
                             </p>
                           </div>
                         </div>
@@ -382,10 +474,11 @@ export default async function Home() {
                 <div className="margin-bottom margin-large">
                   <div className="max-width-large">
                     <div className="margin-bottom margin-small">
-                      <h2>Contact us</h2>
+                      <h2>{home.contactHeading ?? "Contact us"}</h2>
                     </div>
                     <p className="text-size-medium">
-                      For general inquiries, use this form to reach us.
+                      {home.contactBody ??
+                        "For general inquiries, use this form to reach us."}
                     </p>
                   </div>
                 </div>
@@ -470,10 +563,10 @@ export default async function Home() {
                           <h3 className="heading-style-h6">Email</h3>
                         </div>
                         <a
-                          href="mailto:contact@uniformleague.org"
+                          href={`mailto:${home.contactEmail ?? "contact@uniformleague.org"}`}
                           className="text-style-link"
                         >
-                          contact@uniformleague.org
+                          {home.contactEmail ?? "contact@uniformleague.org"}
                         </a>
                       </div>
                       <div className="home_contact_item">
@@ -501,17 +594,24 @@ export default async function Home() {
                             />
                             <div className="margin-bottom margin-xxsmall">
                               <h3 className="heading-style-h5 text-color-gold margin-bottom margin-xxsmall">
-                                Interested in joining MAUL?
+                                {home.contactMembershipHeading ??
+                                  "Interested in joining MAUL?"}
                               </h3>
                               <p className="text-color-white">
-                                Check out{" "}
-                                <Link
-                                  href="/membership/how-to-join"
-                                  className="text-color-white"
-                                >
-                                  our guide
-                                </Link>{" "}
-                                on how to become a MAUL cadet.
+                                {home.contactMembershipBody ? (
+                                  home.contactMembershipBody
+                                ) : (
+                                  <>
+                                    Check out{" "}
+                                    <Link
+                                      href="/membership/how-to-join"
+                                      className="text-color-white"
+                                    >
+                                      our guide
+                                    </Link>{" "}
+                                    on how to become a MAUL cadet.
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>

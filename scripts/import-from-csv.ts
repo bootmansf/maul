@@ -217,8 +217,67 @@ async function importLeadership() {
   console.log(`✓ Leadership: ${rows.length} rows`);
 }
 
+// Seed the homepage singleton with the text the site currently ships
+// hardcoded, so editors see the live copy and can edit it in place
+// rather than staring at an empty form. Uses createIfNotExists — safe
+// to re-run; never overwrites editor changes.
+async function ensureHomepage() {
+  await client.createIfNotExists({
+    _id: "homepage",
+    _type: "homepage",
+    heroHeading: "Serving since 2007",
+    heroBody:
+      "Mid-Atlantic Uniform League (MAUL) is a gay uniform club. Founded in January 2007, we aim to promote, organize and attend uniform-themed events in the mid-atlantic and surrounding regions.",
+    heroCtaLabel: "Learn More",
+    heroCtaLink: "/about",
+    aboutHeading: "Mid-Atlantic & Beyond",
+    aboutBody:
+      "While our officers attend to many events in the Mid-Atlantic, MAUL membership is open to anyone who is proud to openly identify as a gay adult male with a uniform fetish, regardless of age, race, creed, religion, or any other such classification.",
+    aboutCtaLabel: "How to Join",
+    aboutCtaLink: "/membership/how-to-join",
+    featuresHeading: "What we\u2019re all about!",
+    featureCards: [
+      {
+        _key: "brotherhood",
+        _type: "card",
+        title: "Brotherhood",
+        body: "We are a social and fraternal association for gay adult male with affinity or fetish for uniforms.",
+        ctaLabel: "Learn More",
+        ctaLink: "/about/our-mission",
+      },
+      {
+        _key: "community",
+        _type: "card",
+        title: "Community",
+        body: "We conduct outreach with other queer leather and uniform clubs and attend leather events throughout the year.",
+        ctaLabel: "Learn More",
+        ctaLink: "/about/our-mission",
+      },
+      {
+        _key: "service",
+        _type: "card",
+        title: "Service",
+        body: "We support and assist appropriate charities and community services, particularly those related to gay, fetish or public safety issues.",
+        ctaLabel: "Learn More",
+        ctaLink: "/about/our-mission",
+      },
+    ],
+    eventsHeading: "Where to find us",
+    eventsBody:
+      "Officers of the club assemble at several events during the year including local police parades, motorcycle rodeos, and other law enforcement events throughout the year.",
+    eventsPartnerHeading: "Looking to partner with us for an event?",
+    eventsPartnerBody: "Contact our Events Officer or use the form below.",
+    contactHeading: "Contact us",
+    contactBody: "For general inquiries, use this form to reach us.",
+    contactEmail: "contact@uniformleague.org",
+    contactMembershipHeading: "Interested in joining MAUL?",
+  });
+  console.log("✓ Homepage: ensured singleton exists");
+}
+
 async function main() {
   console.log(`Importing into Sanity project ${projectId}/${dataset}\n`);
+  await ensureHomepage();
   await importEvents();
   await importAnniversaryEvents();
   await importAmccClubs();
