@@ -3,9 +3,11 @@ import { SiteNav } from "./components/SiteNav";
 import { SiteFooter } from "./components/SiteFooter";
 import { getClient } from "@/sanity/client";
 import { isSanityConfigured } from "@/sanity/env";
+import { urlFor } from "@/sanity/image";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 const UPCOMING_EVENTS_QUERY = `*[_type == "event" && dateTime >= now()] | order(dateTime asc)[0...6]{
-  _id, title, "slug": slug.current, dateTime, locationVenue, venueAddress, "infoLink": infoLink
+  _id, title, "slug": slug.current, dateTime, locationVenue, venueAddress, "infoLink": infoLink, eventPicture
 }`;
 
 export const revalidate = 60;
@@ -18,6 +20,7 @@ type UpcomingEvent = {
   locationVenue?: string;
   venueAddress?: string;
   infoLink?: string;
+  eventPicture?: SanityImageSource;
 };
 
 function formatEventDate(iso: string) {
@@ -322,7 +325,15 @@ export default async function Home() {
                                     </div>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                      src="/images/Placeholder-Image---Landscape.svg"
+                                      src={
+                                        e.eventPicture
+                                          ? urlFor(e.eventPicture)
+                                              .width(800)
+                                              .height(600)
+                                              .fit("crop")
+                                              .url()
+                                          : "/images/Placeholder-Image---Landscape.svg"
+                                      }
                                       alt=""
                                       className="event8_image"
                                       loading="lazy"

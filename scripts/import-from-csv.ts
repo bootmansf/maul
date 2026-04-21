@@ -43,24 +43,51 @@ function readCsv(filename: string): Row[] {
   return parse(raw, { columns: true, skip_empty_lines: true, trim: true });
 }
 
-function descriptionBlock(text: string) {
-  if (!text) return undefined;
-  return [
-    {
-      _type: "block",
-      _key: Math.random().toString(36).slice(2, 10),
-      style: "normal",
-      markDefs: [],
-      children: [
-        {
-          _type: "span",
-          _key: Math.random().toString(36).slice(2, 10),
-          text,
-          marks: [],
-        },
-      ],
-    },
-  ];
+function randomKey() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function textToBlock(text: string) {
+  return {
+    _type: "block",
+    _key: randomKey(),
+    style: "normal",
+    markDefs: [],
+    children: [
+      { _type: "span", _key: randomKey(), text, marks: [] },
+    ],
+  };
+}
+
+function decodeEntities(s: string) {
+  return s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "\u2019")
+    .replace(/&lsquo;/g, "\u2018")
+    .replace(/&rdquo;/g, "\u201D")
+    .replace(/&ldquo;/g, "\u201C");
+}
+
+// Webflow CSV description/notes columns contain raw HTML like
+// "<p>first para</p><p>second</p>". Convert to Sanity PortableText blocks.
+function descriptionBlock(raw: string) {
+  if (!raw) return undefined;
+  const decoded = decodeEntities(raw).replace(/\s+/g, " ").trim();
+
+  const paragraphs = decoded.includes("</p>")
+    ? decoded
+        .split(/<\/p>/i)
+        .map((p) => p.replace(/<[^>]+>/g, "").trim())
+        .filter(Boolean)
+    : [decoded.replace(/<[^>]+>/g, "").trim()].filter(Boolean);
+
+  if (paragraphs.length === 0) return undefined;
+  return paragraphs.map(textToBlock);
 }
 
 async function importEvents() {
@@ -87,6 +114,21 @@ async function importEvents() {
   console.log(`✓ Events: ${rows.length} rows`);
 }
 
+// CSV "Date" column is a weekday label like "Saturday, September 19" (no year).
+// Map to the real 2026 dates for the anniversary weekend.
+const ANNIV_WEEKDAY_TO_DATE: Record<string, string> = {
+  thursday: "2026-09-17",
+  friday: "2026-09-18",
+  saturday: "2026-09-19",
+  sunday: "2026-09-20",
+};
+
+function parseAnnivDate(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const weekday = raw.split(",")[0].trim().toLowerCase();
+  return ANNIV_WEEKDAY_TO_DATE[weekday];
+}
+
 async function importAnniversaryEvents() {
   const rows = readCsv(
     "Mid-Atlantic Uniform League - 20th Anniversary Events - 69850801b974f7bfb8191b64.csv"
@@ -99,7 +141,7 @@ async function importAnniversaryEvents() {
       _type: "anniversaryEvent",
       event: r.Event,
       slug: { _type: "slug", current: r.Slug },
-      date: r.Date ? new Date(r.Date).toISOString().slice(0, 10) : undefined,
+      date: parseAnnivDate(r.Date),
       startTime: r["Event Start Time"] || undefined,
       endTime: r["Event End Time"] || undefined,
       venue: r.Venue || undefined,

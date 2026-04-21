@@ -14,9 +14,23 @@ export const metadata = {
     "Join us September 17-20, 2026 in Providence, RI as we celebrate MAUL's 20th anniversary.",
 };
 
-const ANNIV_QUERY = `*[_type == "anniversaryEvent"] | order(date asc, startTime asc){
+const ANNIV_QUERY = `*[_type == "anniversaryEvent"] | order(date asc){
   _id, event, "slug": slug.current, date, startTime, endTime, venue, notes
 }`;
+
+// "3:00 PM" / "10:30 AM" → minutes since midnight for sorting.
+// Returns Infinity for missing/unparseable so they sink to the bottom.
+function minutesFromTimeString(t: string | undefined): number {
+  if (!t) return Number.POSITIVE_INFINITY;
+  const m = t.trim().match(/^(\d{1,2}):?(\d{2})?\s*(AM|PM)?$/i);
+  if (!m) return Number.POSITIVE_INFINITY;
+  let h = parseInt(m[1], 10);
+  const mins = m[2] ? parseInt(m[2], 10) : 0;
+  const mer = m[3]?.toUpperCase();
+  if (mer === "PM" && h !== 12) h += 12;
+  if (mer === "AM" && h === 12) h = 0;
+  return h * 60 + mins;
+}
 
 type AnnivEvent = {
   _id: string;
@@ -43,7 +57,12 @@ export default async function Maul20Page() {
 
   const byDay = SCHEDULE_DAYS.map((d) => ({
     ...d,
-    items: all.filter((e) => e.date === d.key),
+    items: all
+      .filter((e) => e.date === d.key)
+      .sort(
+        (a, b) =>
+          minutesFromTimeString(a.startTime) - minutesFromTimeString(b.startTime)
+      ),
   }));
 
   return (
