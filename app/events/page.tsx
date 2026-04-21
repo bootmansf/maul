@@ -138,7 +138,12 @@ function EventList({
                   {e.eventPicture?.asset ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={urlFor(e.eventPicture).width(800).height(400).url()}
+                      src={urlFor(e.eventPicture)
+                        .width(800)
+                        .height(800)
+                        .fit("crop")
+                        .crop("center")
+                        .url()}
                       alt={e.title}
                       loading="lazy"
                       className="event4_image"

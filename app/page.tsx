@@ -331,6 +331,7 @@ export default async function Home() {
                                               .width(800)
                                               .height(600)
                                               .fit("crop")
+                                              .crop("center")
                                               .url()
                                           : "/images/Placeholder-Image---Landscape.svg"
                                       }

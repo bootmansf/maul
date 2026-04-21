@@ -8,7 +8,9 @@ import { urlFor } from "@/sanity/image";
 export const revalidate = 60;
 
 const GALLERIES_QUERY = `*[_type == "gallery"] | order(date desc){
-  _id, name, "slug": slug.current, date, coverImage, "imageCount": count(images)
+  _id, name, "slug": slug.current, date, coverImage,
+  "firstImage": images[0]{asset},
+  "imageCount": count(images)
 }`;
 
 type Gallery = {
@@ -17,6 +19,7 @@ type Gallery = {
   slug: string;
   date?: string;
   coverImage?: { asset?: { _ref: string } };
+  firstImage?: { asset?: { _ref: string } };
   imageCount?: number;
 };
 
@@ -64,13 +67,23 @@ export default async function GalleryPage() {
                     </div>
                   ) : (
                     <div className="gallery_grid">
-                      {galleries.map((g) => (
+                      {galleries.map((g) => {
+                        const cover = g.coverImage?.asset
+                          ? g.coverImage
+                          : g.firstImage?.asset
+                            ? g.firstImage
+                            : null;
+                        return (
                         <Link key={g._id} href={`/gallery/${g.slug}`} className="gallery_card">
                           <div className="gallery_card-cover">
-                            {g.coverImage?.asset ? (
+                            {cover ? (
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img
-                                src={urlFor(g.coverImage).width(600).height(450).url()}
+                                src={urlFor(cover)
+                                  .width(600)
+                                  .height(450)
+                                  .fit("crop")
+                                  .url()}
                                 alt={g.name}
                                 loading="lazy"
                               />
@@ -91,7 +104,8 @@ export default async function GalleryPage() {
                             </p>
                           </div>
                         </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

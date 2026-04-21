@@ -5,6 +5,7 @@ import { PortableText } from "@portabletext/react";
 import type { Metadata } from "next";
 import { SiteNav } from "../../components/SiteNav";
 import { SiteFooter } from "../../components/SiteFooter";
+import { GalleryLightbox } from "../../components/GalleryLightbox";
 import { getClient } from "@/sanity/client";
 import { isSanityConfigured } from "@/sanity/env";
 import { urlFor } from "@/sanity/image";
@@ -110,20 +111,23 @@ export default async function GalleryDetailPage({
                   ) : null}
 
                   {gallery.images?.length ? (
-                    <div className="gallery_detail-grid">
-                      {gallery.images.map((img) =>
-                        img.asset ? (
-                          <figure key={img._key} className="gallery_detail-image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={urlFor(img).width(800).height(800).url()}
-                              alt={img.caption || gallery.name}
-                              loading="lazy"
-                            />
-                          </figure>
-                        ) : null
-                      )}
-                    </div>
+                    <GalleryLightbox
+                      galleryName={gallery.name}
+                      images={gallery.images
+                        .filter((img): img is GalleryImage & { asset: { _ref: string } } =>
+                          Boolean(img.asset)
+                        )
+                        .map((img) => ({
+                          key: img._key,
+                          caption: img.caption,
+                          thumbSrc: urlFor(img)
+                            .width(800)
+                            .height(800)
+                            .fit("crop")
+                            .url(),
+                          fullSrc: urlFor(img).width(2000).url(),
+                        }))}
+                    />
                   ) : (
                     <p className="text-color-blue">No photos in this gallery yet.</p>
                   )}
