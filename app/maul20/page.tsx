@@ -24,8 +24,31 @@ const PAGE_QUERY = `*[_id == "anniversaryPage"][0]{
   heroHeading, heroDates, heroLocation, heroBody, countdownTarget, heroImage,
   ticketsHeading, ticketsBody, ticketsCtaLabel, ticketsUrl,
   hotelHeading, hotelName, hotelAddress, hotelCtaLabel, hotelUrl,
-  scheduleHeading
+  scheduleHeading,
+  faqHeading, faqs[]{ question, answer },
+  finalTicketsLabel, finalHotelLabel
 }`;
+
+// Default destinations for the ticket/hotel CTAs, shared by the hero cards and
+// the closing buttons so both always point at the same place.
+const DEFAULT_TICKETS_URL =
+  "https://www.eventbrite.com/e/mid-atlantic-uniform-league-20th-anniversary-run-festival-providence-ri-registration-1982476097374";
+const DEFAULT_HOTEL_URL =
+  "https://secure.webrez.com/hotel/4174/?package_id=341360&date_from=20260918&date_to=20260920";
+
+// Shown until an editor adds FAQs in the Studio.
+const FALLBACK_FAQS: { question: string; answer: string }[] = [
+  {
+    question: "Where are all the events located?",
+    answer:
+      "Everything is within a two-block radius that is walkable between the Providence Hotel, the Providence Eagle, and Eagle's Nest. Snow Street will be blocked off.",
+  },
+  {
+    question: "Are there restaurants nearby?",
+    answer:
+      "There are multiple restaurants nearby the festival area within walking distance. Downtown Providence is very walkable.",
+  },
+];
 
 type AnnivPage = {
   heroHeading?: string;
@@ -44,6 +67,10 @@ type AnnivPage = {
   hotelCtaLabel?: string;
   hotelUrl?: string;
   scheduleHeading?: string;
+  faqHeading?: string;
+  faqs?: { question?: string; answer?: string }[];
+  finalTicketsLabel?: string;
+  finalHotelLabel?: string;
 };
 
 // Split a multi-line string into JSX with <br /> between lines so editors
@@ -100,6 +127,10 @@ export default async function Maul20Page() {
     : [[] as AnnivEvent[], null];
 
   const pg: AnnivPage = page ?? {};
+
+  const ticketsUrl = pg.ticketsUrl ?? DEFAULT_TICKETS_URL;
+  const hotelUrl = pg.hotelUrl ?? DEFAULT_HOTEL_URL;
+  const faqs = pg.faqs?.length ? pg.faqs : FALLBACK_FAQS;
 
   const byDay = SCHEDULE_DAYS.map((d) => ({
     ...d,
@@ -168,10 +199,7 @@ export default async function Maul20Page() {
                       <div className="margin-top margin-xsmall">
                         <div className="centerbuttonblock">
                           <a
-                            href={
-                              pg.ticketsUrl ??
-                              "https://www.eventbrite.com/e/mid-atlantic-uniform-league-20th-anniversary-run-festival-providence-ri-registration-1982476097374"
-                            }
+                            href={ticketsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="button is-alternate w-button"
@@ -206,10 +234,7 @@ export default async function Maul20Page() {
                       <div className="margin-top margin-xsmall">
                         <div className="centerbuttonblock">
                           <a
-                            href={
-                              pg.hotelUrl ??
-                              "https://secure.webrez.com/hotel/4174/?package_id=341360&date_from=20260918&date_to=20260920"
-                            }
+                            href={hotelUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="button is-alternate w-button"
@@ -338,6 +363,80 @@ export default async function Maul20Page() {
                         </div>
                       </details>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section_event31">
+          <div className="padding-global">
+            <div className="container-medium">
+              <div className="padding-section-large">
+                <div className="margin-bottom margin-medium">
+                  <div className="max-width-large align-center">
+                    <div className="text-align-center">
+                      <div className="margin-bottom">
+                        <h2 className="heading-style-h2">
+                          {pg.faqHeading ?? "Frequently asked questions"}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="max-width-large align-center">
+                  {faqs.map((item, i) => (
+                    <details key={i} className="accordion2_component">
+                      <summary className="accordion2_top">
+                        <div className="heading-style-h6">
+                          <strong>{item.question}</strong>
+                        </div>
+                        <div className="accordion2_icon" aria-hidden="true">
+                          <svg
+                            width="100%"
+                            height="100%"
+                            viewBox="0 0 32 32"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M25.3333 15.667V16.3336C25.3333 16.7018 25.0349 17.0003 24.6667 17.0003H17V24.667C17 25.0351 16.7015 25.3336 16.3333 25.3336H15.6667C15.2985 25.3336 15 25.0351 15 24.667V17.0003H7.3333C6.96511 17.0003 6.66663 16.7018 6.66663 16.3336V15.667C6.66663 15.2988 6.96511 15.0003 7.3333 15.0003H15V7.33365C15 6.96546 15.2985 6.66699 15.6667 6.66699H16.3333C16.7015 6.66699 17 6.96546 17 7.33365V15.0003H24.6667C25.0349 15.0003 25.3333 15.2988 25.3333 15.667Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        </div>
+                      </summary>
+                      {item.answer ? (
+                        <div className="accordion2_bottom">
+                          <div className="margin-bottom margin-small">
+                            <p>{item.answer}</p>
+                          </div>
+                        </div>
+                      ) : null}
+                    </details>
+                  ))}
+                </div>
+
+                <div className="margin-top margin-large">
+                  <div className="button-group is-center">
+                    <a
+                      href={ticketsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="button w-button"
+                    >
+                      {pg.finalTicketsLabel ?? "Buy Tickets"}
+                    </a>
+                    <a
+                      href={hotelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="button w-button"
+                    >
+                      {pg.finalHotelLabel ?? "Book Your Room"}
+                    </a>
                   </div>
                 </div>
               </div>

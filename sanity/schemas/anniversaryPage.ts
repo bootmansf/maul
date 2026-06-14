@@ -1,4 +1,4 @@
-import { defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType } from "sanity";
 
 export const anniversaryPage = defineType({
   name: "anniversaryPage",
@@ -9,6 +9,7 @@ export const anniversaryPage = defineType({
     { name: "tickets", title: "Tickets card" },
     { name: "hotel", title: "Hotel card" },
     { name: "schedule", title: "Schedule intro" },
+    { name: "faq", title: "FAQ & closing buttons" },
   ],
   fields: [
     // Hero
@@ -78,6 +79,59 @@ export const anniversaryPage = defineType({
       title: "Schedule section heading",
       type: "string",
       group: "schedule",
+    }),
+
+    // FAQ + closing buttons
+    defineField({
+      name: "faqHeading",
+      title: "FAQ section heading",
+      type: "string",
+      group: "faq",
+    }),
+    defineField({
+      name: "faqs",
+      title: "FAQs",
+      type: "array",
+      group: "faq",
+      description: "Drag to reorder. These render as expandable toggles.",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "faqItem",
+          title: "FAQ",
+          fields: [
+            defineField({
+              name: "question",
+              title: "Question",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "answer",
+              title: "Answer",
+              type: "text",
+              rows: 3,
+            }),
+          ],
+          preview: {
+            select: { title: "question", subtitle: "answer" },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "finalTicketsLabel",
+      title: "Closing — tickets button label",
+      type: "string",
+      description: "Links to the Tickets card button URL above",
+      group: "faq",
+    }),
+    defineField({
+      name: "finalHotelLabel",
+      title: "Closing — hotel button label",
+      type: "string",
+      description: "Links to the Hotel card button URL above",
+      group: "faq",
     }),
   ],
   preview: { prepare: () => ({ title: "20th Anniversary page" }) },
